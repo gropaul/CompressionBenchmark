@@ -3,4 +3,16 @@ project(CompressionBenchmark)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_library(CompressionBenchmark STATIC library.cpp)
+include_directories(/Users/paul/workspace/duckdb/src/include)
+link_directories(/Users/paul/workspace/duckdb/build/release/src)
+
+include_directories(external/fsst)
+add_subdirectory(external/fsst)
+
+include_directories(external/onpair)
+add_subdirectory(external/onpair)
+
+
+add_executable(CompressionBenchmark main.cpp)
+target_link_libraries(CompressionBenchmark duckdb fsst onpair)
+

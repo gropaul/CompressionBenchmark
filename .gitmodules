@@ -1,0 +1,6 @@
+[submodule "external/fsst"]
+	path = external/fsst
+	url = https://github.com/cwida/fsst
+[submodule "external/onpair"]
+	path = external/onpair
+	url = https://github.com/gargiulofrancesco/onpair_cpp
