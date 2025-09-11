@@ -2,7 +2,7 @@
 #pragma once;
 
 struct TableConfig {
-    std::string path;
+    std::string name;
     std::vector<std::string> columns;
 };
 

@@ -15,8 +15,8 @@ inline BenchmarkConfig GetBenchmarkFromDatabase(duckdb::Connection &con, Benchma
         auto column_name = result->GetValue(1, row_idx).ToString();
 
         auto &tbl = table_map[table_name];
-        if (tbl.path.empty()) {
-            tbl.path = table_name;
+        if (tbl.name.empty()) {
+            tbl.name = table_name;
         }
         tbl.columns.push_back(column_name);
     }

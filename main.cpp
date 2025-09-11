@@ -23,5 +23,6 @@ int main() {
     const auto config = GetBenchmarkFromDatabase(con, meta);
 
 
-    RunExperiment(con, config);
+    const auto results = RunExperiment(con, config);
+    SaveResultsAsCSV(results, "/Users/paul/CLionProjects/CompressionBenchmark/results.csv");
 }

@@ -10,21 +10,22 @@
 #include "models/benchmark_config.hpp"
 
 
-inline CompressionResult RunFileExperiment(
+inline ExperimentResult RunFileExperiment(
     duckdb::Connection &con,
-    const BenchmarkConfig &config, const TableConfig &file,
+    const BenchmarkConfig &config, const TableConfig &table_config,
     const std::string &column_name
 ) {
     StringCollector collector(200000, 100000);
 
     std::ostringstream ss;
     ss << "SELECT " << column_name << " AS value "
-            << "FROM "  << file.path
+            << "FROM "  << table_config.name
             << " LIMIT 100_000;\n";
     std::string query = ss.str();
-    printf(query.c_str());
     const auto query_result = con.Query(query);
-    printf("Done querying\n");
+
+
+
     if (query_result->HasError()) {
         printf(query_result->GetError().c_str());
     }
@@ -46,13 +47,13 @@ inline CompressionResult RunFileExperiment(
         current_chunk = query_result->Fetch();
     }
 
-    if (collector.Size() < 20000) {
-        return CompressionResult{
-            0,
+    if (collector.Size() < 20000 || query_result->RowCount() < 80000) {
+        return ExperimentResult{
+            0, table_config.name, column_name
         };
     }
 
-    CompressionResult result(collector.TotalBytes());
+    ExperimentResult result(collector.TotalBytes(), table_config.name, column_name);
     for (const CompressionAlgorithm algo: config.algorithms) {
         result.AddResult(Compress(algo, collector, config.n_repeats));
     }
@@ -61,11 +62,13 @@ inline CompressionResult RunFileExperiment(
 }
 
 
-inline void RunExperiment(duckdb::Connection &con, const BenchmarkConfig &config) {
+inline std::vector<ExperimentResult> RunExperiment(duckdb::Connection &con, const BenchmarkConfig &config) {
+    std::vector<ExperimentResult> results;
     for (const auto &file: config.tables) {
         for (const auto &column: file.columns) {
             auto res = RunFileExperiment(con, config, file, column);
-            res.PrettyPrint();
+            results.push_back(res);
         }
     }
+    return results;
 }

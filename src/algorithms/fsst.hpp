@@ -65,7 +65,7 @@ inline AlgorithmResult CompressFSST(const StringCollector &collector) {
     fsst_decoder_t decoder = fsst_decoder(encoder);
 
     const size_t decompression_buffer_size = collector.TotalBytes();
-    unsigned char *decompression_buffer = static_cast<uint8_t *>(malloc(decompression_buffer_size));
+    auto *decompression_buffer = static_cast<uint8_t *>(malloc(decompression_buffer_size));
     unsigned char *decompression_write_pointer = decompression_buffer;
 
     for (size_t index = 0; index < collector.Size(); index++) {

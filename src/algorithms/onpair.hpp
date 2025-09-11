@@ -14,7 +14,7 @@ inline AlgorithmResult CompressOnPair16(const StringCollector &collector) {
     const auto t1 = clock::now();
 
     const size_t compression_buffer_size = collector.TotalBytes() + 32;
-    unsigned char *compression_buffer = reinterpret_cast<uint8_t*>(malloc(compression_buffer_size));
+    auto *compression_buffer = reinterpret_cast<uint8_t*>(malloc(compression_buffer_size));
     // on_pair16.decompress_all(result_buffer);
     //
     // todo: this is quiet interesting that this is much faster to decode everything
