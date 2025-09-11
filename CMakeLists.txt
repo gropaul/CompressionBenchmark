@@ -16,3 +16,6 @@ add_subdirectory(external/onpair)
 add_executable(CompressionBenchmark main.cpp)
 target_link_libraries(CompressionBenchmark duckdb fsst onpair)
 
+add_executable(CompressionBenchmarkCLI cli_main.cpp)
+target_link_libraries(CompressionBenchmarkCLI duckdb fsst onpair)
+
