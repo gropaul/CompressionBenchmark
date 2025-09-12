@@ -2,6 +2,8 @@
 
 #include "duckdb.hpp"
 #include <cstdio>
+#include <iostream>
+#include <iomanip>
 
 #include "fsst.h"
 #include "algorithms/api.hpp"
@@ -15,19 +17,26 @@ inline ExperimentResult RunFileExperiment(
     const BenchmarkConfig &config, const TableConfig &table_config,
     const std::string &column_name
 ) {
-    StringCollector collector(200000, 100000);
+    StringCollector collector(200000, ROW_GROUP_SIZE);
 
     std::ostringstream ss;
     ss << "SELECT " << column_name << " AS value "
             << "FROM "  << table_config.name
-            << " LIMIT 100_000;\n";
+            << " LIMIT " << ROW_GROUP_SIZE;
     std::string query = ss.str();
     const auto query_result = con.Query(query);
 
-
+    auto empty_result = ExperimentResult{
+        0, 0, 0, table_config.name, column_name
+    };
 
     if (query_result->HasError()) {
         printf(query_result->GetError().c_str());
+        return empty_result;
+    } else {
+        if (query_result->RowCount() < MIN_ROWS) {
+            return empty_result;
+        }
     }
 
     auto current_chunk = query_result->Fetch();
@@ -47,14 +56,12 @@ inline ExperimentResult RunFileExperiment(
         current_chunk = query_result->Fetch();
     }
 
-    if (collector.Size() < 20000 || query_result->RowCount() < 80000) {
-        return ExperimentResult{
-            0, table_config.name, column_name
-        };
+    if (collector.Size() < MIN_NON_EMPTY_ROWS) {
+        return empty_result;
     }
 
-    ExperimentResult result(collector.TotalBytes(), table_config.name, column_name);
-    for (const CompressionAlgorithm algo: config.algorithms) {
+    ExperimentResult result(collector.TotalBytes(), query_result->RowCount(), collector.Size(), table_config.name, column_name);
+    for (const AlgorithType algo: config.algorithms) {
         result.AddResult(Compress(algo, collector, config.n_repeats));
     }
 
@@ -64,11 +71,22 @@ inline ExperimentResult RunFileExperiment(
 
 inline std::vector<ExperimentResult> RunExperiment(duckdb::Connection &con, const BenchmarkConfig &config) {
     std::vector<ExperimentResult> results;
+
+    const uint64_t n_tables = config.tables.size();
+    uint64_t current_table_index = 0;
+
     for (const auto &file: config.tables) {
+
         for (const auto &column: file.columns) {
             auto res = RunFileExperiment(con, config, file, column);
             results.push_back(res);
         }
+
+        current_table_index += 1;
+        printf("Finished table %llu of %llu: %s\n",
+               static_cast<unsigned long long>(current_table_index),
+               static_cast<unsigned long long>(n_tables),
+               file.name.c_str());
     }
     return results;
 }

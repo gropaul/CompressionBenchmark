@@ -1,5 +1,20 @@
 
-#pragma once;
+#pragma once
+
+
+#include "compression_result.hpp"
+#include "string_collection.hpp"
+
+
+constexpr idx_t VECTOR_SIZE = 2048;
+constexpr idx_t ROW_GROUP_SIZE = 100000;
+constexpr idx_t MIN_ROWS = 80000;
+constexpr idx_t MIN_NON_EMPTY_ROWS = 20000;
+
+constexpr idx_t N_RANDOM_ROW_ACCESSES = MIN_NON_EMPTY_ROWS;
+constexpr idx_t N_RANDOM_VECTOR_ACCESSES = MIN_NON_EMPTY_ROWS / VECTOR_SIZE;
+
+
 
 struct TableConfig {
     std::string name;
@@ -9,10 +24,17 @@ struct TableConfig {
 
 struct BenchmarkConfigMetaData {
     uint64_t n_repeats;
-    std::vector<CompressionAlgorithm> algorithms;
+    std::vector<AlgorithType> algorithms;
 };
 
 struct BenchmarkConfig: BenchmarkConfigMetaData {
 
     std::vector<TableConfig> tables;
+};
+
+
+struct ExperimentInput {
+    StringCollector &collector;
+    std::vector<idx_t> random_row_indices;
+    std::vector<idx_t> random_vector_indices;
 };

@@ -26,13 +26,13 @@ int main(int argc, char* argv[]) {
         duckdb::Connection con(db);
 
         con.Query("PRAGMA threads=1");
-        con.Query("SELECT version()")->Print();
+        con.Query("SELECT version()")->GetValue(0,0).Print();
 
         const BenchmarkConfigMetaData meta = {
             5,
             {
-                CompressionAlgorithm::FSST,
-                CompressionAlgorithm::OnPair16
+                AlgorithType::FSST,
+                AlgorithType::OnPair16
             }
         };
         const auto config = GetBenchmarkFromDatabase(con, meta);

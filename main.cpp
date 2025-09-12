@@ -11,18 +11,18 @@ int main() {
     duckdb::Connection con(db);
 
     con.Query("PRAGMA threads=1");
-    con.Query("SELECT version()")->Print();
+    con.Query("SELECT version()")->GetValue(0,0).Print();
 
     const BenchmarkConfigMetaData meta = {
         5,
         {
-            CompressionAlgorithm::FSST,
-            CompressionAlgorithm::OnPair16
+            AlgorithType::FSST,
+            AlgorithType::OnPair16
         }
     };
     const auto config = GetBenchmarkFromDatabase(con, meta);
 
 
     const auto results = RunExperiment(con, config);
-    SaveResultsAsCSV(results, "/Users/paul/CLionProjects/CompressionBenchmark/results.csv");
+    SaveResultsAsCSV(results, "/Users/paul/workspace/SqlPile/external/CompressionBenchmark/results.csv");
 }

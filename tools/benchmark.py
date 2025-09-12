@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 
 
-def run_benchmark(duckdb_path: str, output_csv: str, executable_path: str = None):
+def run_compression_benchmark(duckdb_path: str, output_csv: str, executable_path: str = None):
     """
     Run compression benchmark.
     
@@ -18,9 +18,9 @@ def run_benchmark(duckdb_path: str, output_csv: str, executable_path: str = None
     if executable_path is None:
         # Find executable relative to this file
         current_dir = Path(__file__).parent.parent
-        executable_path = current_dir / "CompressionBenchmarkCLI"
-        
+        executable_path = current_dir / "build" / "release" / "CompressionBenchmarkCLI"
+
         if not executable_path.exists():
-            raise FileNotFoundError("CompressionBenchmarkCLI executable not found")
-    
+            raise FileNotFoundError(f"CompressionBenchmarkCLI executable not found at {executable_path}")
+
     subprocess.run([str(executable_path), duckdb_path, output_csv], check=True)
