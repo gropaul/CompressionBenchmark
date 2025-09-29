@@ -1,8 +1,8 @@
 #include "duckdb.hpp"
 #include "../models/compression_result.hpp"
 #include "../models/string_collection.hpp"
-#include "../models/algorithm/impl_onpair16.hpp"
-#include "../models/algorithm/impl_fsst.hpp"
+#include "impl_fsst.hpp"
+#include "impl_onpair16.hpp"
 
 
 // returns a vector of size n with random numbers in the range [0, max)

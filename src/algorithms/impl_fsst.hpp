@@ -2,15 +2,21 @@
 
 #include <stdexcept>
 
+#include "fsst.h"
 #include "interface.hpp"
-#include "onpair16.h"
+
+enum class FsstVariant {
+    FSST,
+    FSST12
+};
+
 
 
 class FsstAlgorithm final : public ICompressionAlgorithm {
 public:
     FsstAlgorithm() = default;
 
-    AlgorithType GetAlgorithmType() const override {
+    [[nodiscard]] AlgorithType GetAlgorithmType() const override {
         return AlgorithType::FSST;
     }
 

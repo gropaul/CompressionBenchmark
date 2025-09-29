@@ -1,11 +1,8 @@
 #pragma once
 
 #include "duckdb.hpp"
-#include <cstdio>
-#include <iostream>
 #include <iomanip>
 
-#include "fsst.h"
 #include "algorithms/api.hpp"
 #include "models/compression_result.hpp"
 #include "models/string_collection.hpp"
@@ -31,7 +28,7 @@ inline ExperimentResult RunFileExperiment(
     };
 
     if (query_result->HasError()) {
-        printf(query_result->GetError().c_str());
+        printf("%s",query_result->GetError().c_str());
         return empty_result;
     } else {
         if (query_result->RowCount() < MIN_ROWS) {

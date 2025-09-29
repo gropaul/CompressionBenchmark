@@ -1,5 +1,5 @@
 #pragma once
-#include "../benchmark_config.hpp"
+#include "../models/benchmark_config.hpp"
 
 
 // An abstract interface for compression algorithms
