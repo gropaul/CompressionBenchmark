@@ -88,7 +88,7 @@ public:
             }
         }
         const auto t7 = clock::now();
-        const auto vector_decompression_hash = duckdb::Hash(vector_decompression_buffer, random_decompression_buffer_size);
+        const auto vector_decompression_hash = duckdb::Hash(vector_decompression_buffer, vector_decompression_buffer_size);
         free(vector_decompression_buffer);
 
 

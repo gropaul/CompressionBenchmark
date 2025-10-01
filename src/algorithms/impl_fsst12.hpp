@@ -2,16 +2,18 @@
 
 #include <stdexcept>
 
-#include "fsst/fsst.h"
+
 #include "interface.hpp"
+#include "fsst12/fsst12.h"
 
 
-class FsstAlgorithm final : public ICompressionAlgorithm {
+
+class Fsst12Algorithm final : public ICompressionAlgorithm {
 public:
-    FsstAlgorithm() = default;
+    Fsst12Algorithm() = default;
 
     [[nodiscard]] AlgorithType GetAlgorithmType() const override {
-        return AlgorithType::FSST;
+        return AlgorithType::FSST12;
     }
 
     void Initialize(const ExperimentInput &input) override {
@@ -28,7 +30,7 @@ public:
 
     void CompressAll(const StringCollector &data) override {
         const StringCollector &collector = data;
-        encoder = fsst_create(
+        encoder = fsst12_create(
             collector.Size(), /* IN: number of strings in batch to sample from. */
             collector.GetLengths().data(), /* IN: byte-lengths of the inputs */
             collector.GetPointers().data(), /* IN: string start pointers. */
@@ -38,8 +40,8 @@ public:
 
         compressed_ready_ = true;
 
-        fsst_compress(
-            encoder, /* IN: encoder obtained from fsst_create(). */
+        fsst12_compress(
+            encoder, /* IN: encoder obtained from fsst12_create(). */
             collector.Size(),
             collector.GetLengths().data(), /* IN: byte-lengths of the inputs */
             collector.GetPointers().data(),
@@ -50,7 +52,7 @@ public:
             /* OUT: output string start pointers. Will all point into [output,output+size). */
         );
 
-        decoder = fsst_decoder(encoder);
+        decoder = fsst12_decoder(encoder);
 
         compressed_ready_ = true;
     }
@@ -60,7 +62,7 @@ public:
         unsigned char *decompression_write_pointer = out;
 
         for (size_t index = 0; index < compressed_lengths.size(); index++) {
-            const size_t decompressed_size = fsst_decompress(
+            const size_t decompressed_size = fsst12_decompress(
                 &decoder, /* IN: use this symbol table for compression. */
                 compressed_lengths[index], /* IN: byte-length of compressed string. */
                 compressed_pointers[index], /* IN: compressed string. */
@@ -73,7 +75,7 @@ public:
 
     inline idx_t DecompressOne(size_t index, uint8_t *out, size_t out_capacity) override {
         if (!compressed_ready_) throw std::logic_error("DecompressOne called before CompressAll/Benchmark");
-        return fsst_decompress(
+        return fsst12_decompress(
             &decoder, /* IN: use this symbol table for compression. */
             compressed_lengths[index], /* IN: byte-length of compressed string. */
             compressed_pointers[index], /* IN: compressed string. */
@@ -82,10 +84,10 @@ public:
         );
     }
 
-    static size_t CalcSymbolTableSize(fsst_encoder_t *encoder) {
+    static size_t CalcSymbolTableSize(fsst12_encoder_t *encoder) {
         // Correctly calculate decoder size by serialization
-        auto* header_buffer = static_cast<uint8_t*>(malloc(FSST_MAXHEADER));
-        const size_t header_size = fsst_export(encoder, header_buffer);
+        auto* header_buffer = static_cast<uint8_t*>(malloc(FSST12_MAXHEADER));
+        const size_t header_size = fsst12_export(encoder, header_buffer);
         free(header_buffer);
         return header_size;
     }
@@ -102,13 +104,13 @@ public:
 
     void Free() override {
         free(compression_buffer);
-        fsst_destroy(encoder);
+        fsst12_destroy(encoder);
     }
 
 private:
     bool compressed_ready_{false};
-    fsst_encoder_t *encoder;
-    fsst_decoder_t decoder;
+    fsst12_encoder_t *encoder;
+    fsst12_decoder_t decoder;
 
     // buffer for the compressed data
     idx_t compression_buffer_size;

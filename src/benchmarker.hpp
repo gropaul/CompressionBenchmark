@@ -73,7 +73,10 @@ inline std::vector<ExperimentResult> RunExperiment(duckdb::Connection &con, cons
     uint64_t current_table_index = 0;
 
     for (const auto &file: config.tables) {
-
+        printf("Stated table %llu of %llu: %s\n",
+               static_cast<unsigned long long>(current_table_index),
+               static_cast<unsigned long long>(n_tables),
+               file.name.c_str());
         for (const auto &column: file.columns) {
             auto res = RunFileExperiment(con, config, file, column);
             results.push_back(res);

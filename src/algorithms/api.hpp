@@ -1,7 +1,8 @@
 #include "duckdb.hpp"
+#include "impl_fsst.hpp"
+#include "impl_fsst12.hpp"
 #include "../models/compression_result.hpp"
 #include "../models/string_collection.hpp"
-#include "impl_fsst.hpp"
 #include "impl_onpair16.hpp"
 
 
@@ -21,6 +22,7 @@ inline AlgorithmResult Compress(const AlgorithType algorithm, const StringCollec
 
     OnPair16Algorithm on_pair16;
     FsstAlgorithm fsst;
+    Fsst12Algorithm fsst12;
 
     const auto random_row_indices = GenerateRandomIndices(N_RANDOM_ROW_ACCESSES, collector.Size());
     const auto random_vector_indices = GenerateRandomIndices(N_RANDOM_VECTOR_ACCESSES, collector.Size() / VECTOR_SIZE);
@@ -30,6 +32,9 @@ inline AlgorithmResult Compress(const AlgorithType algorithm, const StringCollec
         switch (algorithm) {
             case AlgorithType::FSST:
                 results[run_idx] = fsst.Benchmark(input);
+                break;
+            case AlgorithType::FSST12:
+                results[run_idx] = fsst12.Benchmark(input);
                 break;
             case AlgorithType::OnPair16:
                 results[run_idx] = on_pair16.Benchmark(input);
