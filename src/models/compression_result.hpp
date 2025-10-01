@@ -16,6 +16,7 @@ enum class AlgorithType {
     FSST,
     FSST12,
     OnPair16,
+    Dictionary,
 };
 
 
@@ -25,6 +26,7 @@ inline std::string ToString(AlgorithType algo) {
         case AlgorithType::FSST: return "FSST";
         case AlgorithType::FSST12: return "FSST12";
         case AlgorithType::OnPair16: return "OnPair16";
+        case AlgorithType::Dictionary: return "Dictionary";
     }
     return "Unknown";
 }

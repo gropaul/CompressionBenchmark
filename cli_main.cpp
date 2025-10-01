@@ -34,6 +34,7 @@ int main(int argc, char* argv[]) {
                 AlgorithType::FSST,
                 AlgorithType::FSST12,
                 AlgorithType::OnPair16,
+                AlgorithType::Dictionary
             }
         };
         const auto config = GetBenchmarkFromDatabase(con, meta);

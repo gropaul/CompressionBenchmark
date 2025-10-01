@@ -1,10 +1,10 @@
 #include "duckdb.hpp"
 #include "impl_fsst.hpp"
 #include "impl_fsst12.hpp"
+#include "impl_onpair16.hpp"
+#include "impl_dictionary.hpp"
 #include "../models/compression_result.hpp"
 #include "../models/string_collection.hpp"
-#include "impl_onpair16.hpp"
-
 
 // returns a vector of size n with random numbers in the range [0, max)
 inline std::vector<idx_t> GenerateRandomIndices(size_t n, size_t max) {
@@ -15,14 +15,15 @@ inline std::vector<idx_t> GenerateRandomIndices(size_t n, size_t max) {
     return indices;
 }
 
+
 inline AlgorithmResult Compress(const AlgorithType algorithm, const StringCollector &collector,
                                 const size_t n_times) {
     std::vector<AlgorithmResult> results(n_times + 1);
 
-
     OnPair16Algorithm on_pair16;
     FsstAlgorithm fsst;
     Fsst12Algorithm fsst12;
+    DictionaryAlgorithm dictionary;
 
     const auto random_row_indices = GenerateRandomIndices(N_RANDOM_ROW_ACCESSES, collector.Size());
     const auto random_vector_indices = GenerateRandomIndices(N_RANDOM_VECTOR_ACCESSES, collector.Size() / VECTOR_SIZE);
@@ -38,6 +39,9 @@ inline AlgorithmResult Compress(const AlgorithType algorithm, const StringCollec
                 break;
             case AlgorithType::OnPair16:
                 results[run_idx] = on_pair16.Benchmark(input);
+                break;
+            case AlgorithType::Dictionary:
+                results[run_idx] = dictionary.Benchmark(input);
                 break;
             default:
                 throw duckdb::Exception(duckdb::ExceptionType::INTERNAL, "Not know!");
