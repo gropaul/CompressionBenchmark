@@ -26,3 +26,8 @@ add_executable(CompressionBenchmarkCLI cli_main.cpp
 )
 target_link_libraries(CompressionBenchmarkCLI duckdb onpair)
 
+include_directories(external/lz4/lib)
+add_subdirectory(external/lz4/build/cmake)
+target_link_libraries(CompressionBenchmark lz4)
+target_link_libraries(CompressionBenchmarkCLI lz4)
+

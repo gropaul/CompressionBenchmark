@@ -1,12 +1,12 @@
 #pragma once
 
 #include "duckdb.hpp"
-#include <iomanip>
 
 #include "algorithms/api.hpp"
 #include "models/compression_result.hpp"
 #include "models/string_collection.hpp"
 #include "models/benchmark_config.hpp"
+
 
 
 inline void replace_all(std::string &str, const std::string &from, const std::string &to) {
@@ -90,8 +90,15 @@ inline ExperimentResult RunFileExperiment(
 
     ExperimentResult result(0, collector.TotalBytes(), query_result->RowCount(),  collector.Size(), table_config.name,
                             column_name);
+
+    const auto random_row_indices = GenerateRandomIndices(N_RANDOM_ROW_ACCESSES, collector.Size());
+    const auto random_vector_indices = GenerateRandomIndices(N_RANDOM_VECTOR_ACCESSES, collector.Size() / VECTOR_SIZE);
+
+
+    const ExperimentInput input{const_cast<StringCollector &>(collector), random_row_indices, random_vector_indices};
+
     for (const AlgorithType algo: config.algorithms) {
-        result.AddResult(Compress(algo, collector, config.n_repeats));
+        result.AddResult(Compress(algo, input, config.n_repeats));
     }
 
     return result;

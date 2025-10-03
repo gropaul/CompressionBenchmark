@@ -15,11 +15,13 @@ inline std::vector<idx_t> GenerateRandomIndices(size_t n, size_t max) {
     for (idx_t i = 0; i < n; i++) {
         indices[i] = rand() % max;
     }
+    // sort the indices to improve cache locality
+    std::sort(indices.begin(), indices.end());
     return indices;
 }
 
 
-inline AlgorithmResult Compress(const AlgorithType algorithm, const StringCollector &collector,
+inline AlgorithmResult Compress(const AlgorithType algorithm, const ExperimentInput &input,
                                 const size_t n_times) {
     std::vector<AlgorithmResult> results(n_times + 1);
 
@@ -33,9 +35,7 @@ inline AlgorithmResult Compress(const AlgorithType algorithm, const StringCollec
     DictionaryAlgorithm dictionary;
     LZ4Algorithm lz4;
 
-    const auto random_row_indices = GenerateRandomIndices(N_RANDOM_ROW_ACCESSES, collector.Size());
-    const auto random_vector_indices = GenerateRandomIndices(N_RANDOM_VECTOR_ACCESSES, collector.Size() / VECTOR_SIZE);
-    const ExperimentInput input{const_cast<StringCollector &>(collector), random_row_indices, random_vector_indices};
+
 
     for (size_t run_idx = 0; run_idx < n_times + 1; run_idx += 1) {
         switch (algorithm) {

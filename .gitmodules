@@ -4,3 +4,6 @@
 [submodule "external/onpair"]
 	path = external/onpair
 	url = https://github.com/gargiulofrancesco/onpair_cpp
+[submodule "external/lz4"]
+	path = external/lz4
+	url = https://github.com/lz4/lz4.git
