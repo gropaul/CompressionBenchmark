@@ -15,8 +15,13 @@ struct TableConfig;
 enum class AlgorithType {
     FSST,
     FSST12,
+    OnPair,
     OnPair16,
+    OnPairMini10,
+    OnPairMini12,
+    OnPairMini14,
     Dictionary,
+    LZ4,
 };
 
 
@@ -25,8 +30,13 @@ inline std::string ToString(AlgorithType algo) {
     switch (algo) {
         case AlgorithType::FSST: return "FSST";
         case AlgorithType::FSST12: return "FSST12";
+        case AlgorithType::OnPair: return "OnPair";
         case AlgorithType::OnPair16: return "OnPair16";
+        case AlgorithType::OnPairMini10: return "OnPairMini10";
+        case AlgorithType::OnPairMini12: return "OnPairMini12";
+        case AlgorithType::OnPairMini14: return "OnPairMini14";
         case AlgorithType::Dictionary: return "Dictionary";
+        case AlgorithType::LZ4: return "LZ4";
     }
     return "Unknown";
 }
@@ -77,14 +87,15 @@ AlgorithmResult MeanTimes(const std::vector<AlgorithmResult> &results) {
 class ExperimentResult {
 public:
     explicit ExperimentResult(
+        const uint64_t row_group_idx,
         const uint64_t uncompressed_size,
         const uint64_t n_rows,
         const uint64_t n_rows_not_empty,
         std::string table_name,
         std::string column_name
     )
-        : table_name_(std::move(table_name)), column_name_(std::move(column_name)), uncompressed_size_(uncompressed_size),
-          n_rows_(n_rows), n_rows_not_empty_(n_rows_not_empty) {
+        : table_name_(std::move(table_name)), column_name_(std::move(column_name)), row_group_idx_(row_group_idx),
+          n_rows_(n_rows), n_rows_not_empty_(n_rows_not_empty), uncompressed_size_(uncompressed_size) {
     }
 
     void setUncompressedSize(uint64_t size) { uncompressed_size_ = size; }
@@ -126,6 +137,7 @@ private:
     const std::string table_name_;
     const std::string column_name_;
 
+    const uint64_t row_group_idx_;
     const uint64_t n_rows_;
     const uint64_t n_rows_not_empty_;
 

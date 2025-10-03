@@ -30,10 +30,15 @@ int main(int argc, char* argv[]) {
 
         const BenchmarkConfigMetaData meta = {
             5,
+            10,
             {
                 AlgorithType::FSST,
                 AlgorithType::FSST12,
+                AlgorithType::OnPair,
                 AlgorithType::OnPair16,
+                AlgorithType::OnPairMini10,
+                AlgorithType::OnPairMini12,
+                AlgorithType::OnPairMini14,
                 AlgorithType::Dictionary
             }
         };
