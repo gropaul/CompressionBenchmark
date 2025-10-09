@@ -41,9 +41,18 @@ inline std::string ToString(AlgorithType algo) {
     return "Unknown";
 }
 
+
+struct CompressedSizeInfo {
+    uint64_t compressed_size;
+    std::unordered_map<std::string, uint64_t> compressed_size_parts;
+};
+
 struct AlgorithmResult {
     AlgorithType algorithm;
-    uint64_t compressed_size;
+
+    CompressedSizeInfo compressed_size_info;
+
+
     double compression_time_ms;
     double decompression_time_ms_full;
     double decompression_time_ms_vector;
@@ -68,6 +77,7 @@ AlgorithmResult MeanTimes(const std::vector<AlgorithmResult> &results) {
     mean.decompression_time_ms_full = 0.0;
     mean.decompression_time_ms_vector = 0.0;
     mean.decompression_time_ms_random = 0.0;
+
 
     for (const auto &r : results) {
         mean.compression_time_ms        += r.compression_time_ms;
@@ -98,6 +108,10 @@ public:
           n_rows_(n_rows), n_rows_not_empty_(n_rows_not_empty), uncompressed_size_(uncompressed_size) {
     }
 
+    static ExperimentResult Empty() {
+        return ExperimentResult(0, 0, 0, 0, "", "");
+    }
+
     void setUncompressedSize(uint64_t size) { uncompressed_size_ = size; }
     uint64_t GetUncompressedSize() const { return uncompressed_size_; }
     uint64_t GetNumRows() const { return n_rows_; }
@@ -116,13 +130,13 @@ public:
         os << "  Uncompressed size: " << uncompressed_size_ << " bytes\n";
         os << "  Algorithms:\n";
         for (auto &r: results_) {
-            double factor = (r.compressed_size > 0)
-                                ? static_cast<double>(uncompressed_size_) / r.compressed_size
+            double factor = (r.compressed_size_info.compressed_size > 0)
+                                ? static_cast<double>(uncompressed_size_) / r.compressed_size_info.compressed_size
                                 : 0.0;
 
 
             os << "   - " << std::setw(7) << ToString(r.algorithm)
-                    << ": " << r.compressed_size << " bytes"
+                    << ": " << r.compressed_size_info.compressed_size << " bytes"
                     << " (" << std::fixed << std::setprecision(2) << factor << "× smaller)"
                     << ", compression: " << std::setprecision(3) << r.compression_time_ms << " ms"
                     << ", decompression: " << std::setprecision(3) << r.decompression_time_ms_full << " ms\n";
@@ -172,7 +186,7 @@ inline bool SaveResultsAsCSV(const std::vector<ExperimentResult>& experiments,
                 << exp.GetNumRows() << ','
                 << exp.GetNumRowsNotEmpty() << ','
                 << CSVEscape(ToString(ar.algorithm)) << ','
-                << ar.compressed_size << ','
+                << ar.compressed_size_info.compressed_size << ','
                 << ar.compression_time_ms << ','
                 << ar.decompression_time_ms_full << ','
                 << ar.decompression_time_ms_vector << ','

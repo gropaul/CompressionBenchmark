@@ -23,7 +23,34 @@ inline ExperimentResult RunFileExperiment(
     const BenchmarkConfig &config, const TableConfig &table_config,
     const std::string &column_name
 ) {
-    StringCollector collector(200000, ROW_GROUP_SIZE_NUMBER_OF_VALUES);
+    StringCollector collector(ROW_GROUP_SIZE_NUMBER_OF_BYTES, ROW_GROUP_SIZE_NUMBER_OF_VALUES);
+
+    // check if we have enough data in the table:
+    // a) at least MIN_ROWS rows in total
+    // b) OR at least ROW_GROUP_SIZE_NUMBER_OF_BYTES bytes of data
+    std::string check_query = R"(
+        SELECT
+            ifnull(COUNT(*) = {{ROW_GROUP_SIZE_NUMBER_OF_VALUES}}, false) AS has_enough_rows,
+            ifnull(SUM(strlen({{COLUMN_NAME}})) >= {{ROW_GROUP_SIZE_NUMBER_OF_BYTES}}, false) AS has_enough_bytes
+        FROM {{TABLE_NAME}}
+        LIMIT {{ROW_GROUP_SIZE_NUMBER_OF_VALUES}}
+        )";
+    replace_all(check_query, "{{COLUMN_NAME}}", column_name);
+    replace_all(check_query, "{{TABLE_NAME}}", table_config.name);
+    replace_all(check_query, "{{ROW_GROUP_SIZE_NUMBER_OF_VALUES}}", std::to_string(ROW_GROUP_SIZE_NUMBER_OF_VALUES));
+    replace_all(check_query, "{{ROW_GROUP_SIZE_NUMBER_OF_BYTES}}", std::to_string(ROW_GROUP_SIZE_NUMBER_OF_BYTES));
+
+    const auto check_query_result = con.Query(check_query);
+    if (check_query_result->HasError()) {
+        printf("%s\n", check_query_result->GetError().c_str());
+    }
+    const auto has_enough_rows = check_query_result->GetValue(0,0).GetValue<bool>();
+    const auto has_enough_bytes = check_query_result->GetValue(1,0).GetValue<bool>();
+
+    if (!has_enough_rows && !has_enough_bytes) {
+        return ExperimentResult::Empty();
+    }
+
 
     std::string query = R"(
         WITH numbered AS (
@@ -55,17 +82,10 @@ inline ExperimentResult RunFileExperiment(
 
     const auto query_result = con.Query(query);
 
-    auto empty_result = ExperimentResult{
-        0, 0, 0, 0, table_config.name, column_name
-    };
 
     if (query_result->HasError()) {
         printf("%s", query_result->GetError().c_str());
-        return empty_result;
-    } else {
-        if (query_result->RowCount() < MIN_ROWS) {
-            return empty_result;
-        }
+        return ExperimentResult::Empty();
     }
 
     auto current_chunk = query_result->Fetch();
@@ -82,10 +102,6 @@ inline ExperimentResult RunFileExperiment(
             collector.AddStringDDB(string_ddb);
         }
         current_chunk = query_result->Fetch();
-    }
-
-    if (collector.Size() < MIN_NON_EMPTY_ROWS) {
-        return empty_result;
     }
 
     ExperimentResult result(0, collector.TotalBytes(), query_result->RowCount(),  collector.Size(), table_config.name,

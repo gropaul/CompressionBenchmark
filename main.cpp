@@ -8,8 +8,8 @@
 
 int main() {
     // duckdb::DuckDB db("/Users/paul/workspace/SqlPile/data/kaggle/kaggle_data.duckdb");
-    // duckdb::DuckDB db("/Users/paul/workspace/SqlPile/data/sql_storm/imdb/imdb.duckdb");
-    duckdb::DuckDB db("/Users/paul/tpch-10.duckdb");
+    duckdb::DuckDB db("/Users/paul/workspace/SqlPile/data/sql_storm/imdb/imdb.duckdb");
+    // duckdb::DuckDB db("/Users/paul/tpch-10.duckdb");
     duckdb::Connection con(db);
 
     con.Query("PRAGMA threads=1");
@@ -20,13 +20,13 @@ int main() {
         10,
         {
             AlgorithType::FSST,
-            AlgorithType::FSST12,
-            AlgorithType::OnPair,
-            AlgorithType::OnPair16,
-            AlgorithType::OnPairMini10,
-            AlgorithType::OnPairMini12,
-            AlgorithType::OnPairMini14,
-            AlgorithType::Dictionary,
+            // AlgorithType::FSST12,
+            // AlgorithType::OnPair,
+            // AlgorithType::OnPair16,
+            // AlgorithType::OnPairMini10,
+            // AlgorithType::OnPairMini12,
+            // AlgorithType::OnPairMini14,
+            // AlgorithType::Dictionary,
             AlgorithType::LZ4
         }
     };

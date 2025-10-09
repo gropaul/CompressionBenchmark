@@ -4,6 +4,7 @@
 
 #include "fsst/fsst.h"
 #include "interface.hpp"
+#include "../utils/bitpacking_utils.hpp"
 
 
 class FsstAlgorithm final : public ICompressionAlgorithm {
@@ -96,6 +97,11 @@ public:
         for (const unsigned long encoded_string_length: compressed_lengths) {
             total_compressed_size += encoded_string_length;
         }
+
+        // add the size to store the compressed lengths
+        // const size_t size_compressed_lengths = BitPackingUtils::GetCompressedSize(compressed_lengths);
+        // total_compressed_size += size_compressed_lengths;
+
         total_compressed_size += CalcSymbolTableSize(encoder);
         return total_compressed_size;
     }

@@ -23,6 +23,11 @@ public:
         const auto t1 = clock::now();
         const auto compressed_size = this->CompressedSize();
 
+        const CompressedSizeInfo compressed_size_info{
+            compressed_size,
+            {} // no parts for now
+        };
+
         // *** Decompression (ALL) ***
 
         const idx_t decompression_buffer_size = this->GetDecompressionBufferSize(input.collector.TotalBytes());
@@ -33,16 +38,22 @@ public:
         const auto t3 = clock::now();
 
         const auto full_decompression_hash = duckdb::Hash(decompression_buffer, decompression_buffer_size);
+
+        // check whether the decompressed data matches the original data
+        const int full_cmp_result = std::memcmp(decompression_buffer, input.collector.Data(), input.collector.TotalBytes());
+        if (full_cmp_result != 0) {
+            throw std::runtime_error("Full decompression data does not match original data");
+        }
         free(decompression_buffer);
 
         // *** Decompression (RANDOM ROWS) ***
 
-        idx_t row_sizes = 0;
+        idx_t bytes_to_write = 0;
         for (const auto row_idx: input.random_row_indices) {
             const auto row_size = input.collector.GetLength(row_idx);
-            row_sizes += row_size;
+            bytes_to_write += row_size;
         }
-        const idx_t random_decompression_buffer_size = this->GetDecompressionBufferSize(row_sizes);
+        const idx_t random_decompression_buffer_size = this->GetDecompressionBufferSize(bytes_to_write);
         auto *random_decompression_buffer = static_cast<uint8_t *>(malloc(random_decompression_buffer_size));
 
         const auto t4 = clock::now();
@@ -53,20 +64,62 @@ public:
         }
         const auto t5 = clock::now();
 
+        // check whether the decompressed data matches the original data
+        const uint8_t* current_buffer_position = random_decompression_buffer;
+        std::vector<const unsigned char *> original_pointers = input.collector.GetPointers();
+        for (const auto row_idx: input.random_row_indices) {
+            const auto original_row_size = input.collector.GetLength(row_idx);
+            const auto original_row_ptr = original_pointers[row_idx];
+            const auto decompressed_row_ptr = current_buffer_position;
+
+            if (std::memcmp(original_row_ptr, decompressed_row_ptr, original_row_size) != 0) {
+                // print both the strings to help debugging
+                printf("Original:     ");
+                for (idx_t i = 0; i < original_row_size; i++) {
+                    printf("%c ", original_row_ptr[i]);
+                }
+                printf("\nDecompressed: ");
+                for (idx_t i = 0; i < original_row_size; i++) {
+                    printf("%c ", decompressed_row_ptr[i]);
+                }
+                printf("\n");
+                throw std::runtime_error("Random row decompression data does not match original data at row " + std::to_string(row_idx));
+            }
+
+            current_buffer_position += original_row_size;
+        }
+
         const auto random_decompression_hash = duckdb::Hash(random_decompression_buffer, random_decompression_buffer_size);
         free(random_decompression_buffer);
 
         // *** Decompression (RANDOM VECTORS) ***
 
+        bytes_to_write = 0;
+        for (const auto vector_idx: input.random_vector_indices) {
+            const idx_t start_row = vector_idx * VECTOR_SIZE;
+            // if the end is larger than the number of rows, continue!
+            if (start_row + VECTOR_SIZE >= input.collector.Size()) {
+                continue;
+            }
+
+            const idx_t end_row = start_row + VECTOR_SIZE;
+            for (idx_t row_idx = start_row; row_idx < end_row; row_idx++) {
+                const auto row_size = input.collector.GetLength(row_idx);
+                bytes_to_write += row_size;
+            }
+        }
+
+        const idx_t vector_decompression_buffer_size = this->GetDecompressionBufferSize(bytes_to_write);
+
         const auto t6 = clock::now();
 
-        idx_t vector_decompression_buffer_size = 1000;
         auto *vector_decompression_buffer = static_cast<uint8_t *>(malloc(vector_decompression_buffer_size));
+
 
         for (const auto vector_idx: input.random_vector_indices) {
             const idx_t start_row = vector_idx * VECTOR_SIZE;
             // if the end is larger than the number of rows, continue!
-            if (start_row + VECTOR_SIZE>= input.collector.Size()) {
+            if (start_row + VECTOR_SIZE >= input.collector.Size()) {
                 continue;
             }
             const idx_t end_row = start_row + VECTOR_SIZE;
@@ -74,13 +127,6 @@ public:
             for (idx_t row_idx = start_row; row_idx < end_row; row_idx++) {
                 const auto row_size = input.collector.GetLength(row_idx);
                 vector_sizes += row_size;
-            }
-
-            const idx_t expected_buffer_size = this->GetDecompressionBufferSize(vector_sizes);
-            if (expected_buffer_size > vector_decompression_buffer_size) {
-                vector_decompression_buffer_size = expected_buffer_size * 1.5; // grow a bit more to avoid too many reallocates
-                free(vector_decompression_buffer);
-                vector_decompression_buffer = static_cast<uint8_t *>(malloc(vector_decompression_buffer_size));
             }
 
             for (idx_t row_idx = start_row; row_idx < end_row; row_idx++) {
@@ -116,7 +162,7 @@ public:
 
         return {
             this->GetAlgorithmType(),
-            compressed_size,
+            compressed_size_info,
             compression_duration_ns / 1e6,
             full_decompression_duration_ns / 1e6,
             vector_decompression_duration_ns / 1e6,
@@ -132,7 +178,7 @@ public:
     // Prepare an internal state by compressing all strings in the collector
     virtual void CompressAll(const StringCollector &data) = 0;
 
-    virtual idx_t GetDecompressionBufferSize(const idx_t decompressed_size) = 0;
+    virtual idx_t GetDecompressionBufferSize(idx_t decompressed_size) = 0;
     virtual void DecompressAll(uint8_t *out, size_t out_capacity) = 0;
 
     // returns the number of bytes written to out
