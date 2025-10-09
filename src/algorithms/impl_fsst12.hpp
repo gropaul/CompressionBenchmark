@@ -2,9 +2,9 @@
 
 #include <stdexcept>
 
-
-#include "interface.hpp"
 #include "fsst12/fsst12.h"
+#include "interface.hpp"
+#include "../utils/bitpacking_utils.hpp"
 
 
 
@@ -37,8 +37,6 @@ public:
             false
             /* IN: whether input strings are zero-terminated. If so, encoded strings are as well (i.e. symbol[0]=""). */
         );
-
-        compressed_ready_ = true;
 
         fsst12_compress(
             encoder, /* IN: encoder obtained from fsst12_create(). */

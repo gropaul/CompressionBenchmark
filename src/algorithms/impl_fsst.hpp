@@ -37,8 +37,6 @@ public:
             /* IN: whether input strings are zero-terminated. If so, encoded strings are as well (i.e. symbol[0]=""). */
         );
 
-        compressed_ready_ = true;
-
         fsst_compress(
             encoder, /* IN: encoder obtained from fsst_create(). */
             collector.Size(),
@@ -52,7 +50,6 @@ public:
         );
 
         decoder = fsst_decoder(encoder);
-
         compressed_ready_ = true;
     }
 

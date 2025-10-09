@@ -16,18 +16,18 @@ int main() {
     con.Query("SELECT version()")->GetValue(0,0).Print();
 
     const BenchmarkConfigMetaData meta = {
-        5,
-        10,
+        3,
+        1,
         {
-            AlgorithType::FSST,
+            // AlgorithType::FSST,
             // AlgorithType::FSST12,
-            // AlgorithType::OnPair,
+            AlgorithType::OnPair,
             // AlgorithType::OnPair16,
             // AlgorithType::OnPairMini10,
             // AlgorithType::OnPairMini12,
             // AlgorithType::OnPairMini14,
             // AlgorithType::Dictionary,
-            AlgorithType::LZ4
+            // AlgorithType::LZ4
         }
     };
     const auto config = GetBenchmarkFromDatabase(con, meta);

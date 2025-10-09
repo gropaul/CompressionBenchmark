@@ -15,6 +15,14 @@ constexpr idx_t MIN_NON_EMPTY_ROWS = ROW_GROUP_SIZE_NUMBER_OF_VALUES / 4;
 constexpr idx_t N_RANDOM_ROW_ACCESSES = MIN_NON_EMPTY_ROWS;
 constexpr idx_t N_RANDOM_VECTOR_ACCESSES = MIN_NON_EMPTY_ROWS / VECTOR_SIZE;
 
+struct ExperimentState {
+    size_t row_group_idx;
+    size_t rows_offset;
+
+    static ExperimentState Init() {
+        return ExperimentState{0, 0};
+    }
+};
 
 
 struct TableConfig {

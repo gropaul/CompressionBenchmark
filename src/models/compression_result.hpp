@@ -141,6 +141,8 @@ struct AlgorithmResult {
 
     CompressedSizeInfo compressed_size_info;
 
+    bool has_error;
+    std::string error_message;
 
     double compression_time_ms;
     double decompression_time_ms_full;
@@ -187,23 +189,29 @@ public:
     explicit ExperimentResult(
         const uint64_t row_group_idx,
         const uint64_t uncompressed_size,
+        const uint64_t uncompressed_size_strings,
+        const uint64_t uncompressed_size_lengths,
         const uint64_t n_rows,
         const uint64_t n_rows_not_empty,
         std::string table_name,
         std::string column_name
     )
         : table_name_(std::move(table_name)), column_name_(std::move(column_name)), row_group_idx_(row_group_idx),
-          n_rows_(n_rows), n_rows_not_empty_(n_rows_not_empty), uncompressed_size_(uncompressed_size) {
+          n_rows_(n_rows), n_rows_not_empty_(n_rows_not_empty), uncompressed_size_(uncompressed_size),
+          uncompressed_size_strings_(uncompressed_size_strings), uncompressed_size_lengths_(uncompressed_size_lengths) {
     }
 
     static ExperimentResult Empty() {
-        return ExperimentResult(0, 0, 0, 0, "", "");
+        return ExperimentResult(0, 0, 0, 0, 0, 0, "", "");
     }
 
     void setUncompressedSize(uint64_t size) { uncompressed_size_ = size; }
     uint64_t GetUncompressedSize() const { return uncompressed_size_; }
+    uint64_t GetUncompressedSizeStrings() const { return uncompressed_size_strings_; }
+    uint64_t GetUncompressedSizeLengths() const { return uncompressed_size_lengths_; }
     uint64_t GetNumRows() const { return n_rows_; }
     uint64_t GetNumRowsNotEmpty() const { return n_rows_not_empty_; }
+    uint64_t GetRowGroupIdx() const { return row_group_idx_; }
 
     void AddResult(const AlgorithmResult &res) {
         results_.push_back(res);
@@ -244,6 +252,8 @@ private:
     const uint64_t n_rows_not_empty_;
 
     uint64_t uncompressed_size_;
+    uint64_t uncompressed_size_strings_;
+    uint64_t uncompressed_size_lengths_;
     std::vector<AlgorithmResult> results_;
 };
 
@@ -255,10 +265,11 @@ inline bool SaveResultsAsCSV(const std::vector<ExperimentResult> &experiments,
 
     // Header
     out <<
-            "table,column,uncompressed_size,n_rows,n_rows_not_empty,algorithm,compressed_size,"
+            "table,column,row_group_idx,uncompressed_size,uncompressed_size_strings,uncompressed_size_lengths,"
+            "n_rows,n_rows_not_empty,algorithm,compressed_size,"
             "compressed_size_dictionary_strings,compressed_size_dictionary_lengths,compressed_size_dictionary,size_data_codes,compressed_size_data_lengths,compressed_size_data,"
             "compression_time_ms,decompression_time_ms_full,decompression_time_ms_vector,decompression_time_ms_random,"
-            "decompression_hash_full,decompression_hash_vector,decompression_hash_random\n";
+            "decompression_hash_full,decompression_hash_vector,decompression_hash_random,hasError,errorMessage\n";
 
     out << std::fixed << std::setprecision(6); // times to 3 decimals
 
@@ -273,7 +284,10 @@ inline bool SaveResultsAsCSV(const std::vector<ExperimentResult> &experiments,
         for (const auto &ar: algos) {
             out << CSVEscape(exp.table_name()) << ','
                     << CSVEscape(exp.column_name()) << ','
+                    << exp.GetRowGroupIdx() << ','
                     << exp.GetUncompressedSize() << ','
+                    << exp.GetUncompressedSizeStrings() << ','
+                    << exp.GetUncompressedSizeLengths() << ','
                     << exp.GetNumRows() << ','
                     << exp.GetNumRowsNotEmpty() << ','
                     << CSVEscape(ToString(ar.algorithm)) << ','
@@ -290,7 +304,9 @@ inline bool SaveResultsAsCSV(const std::vector<ExperimentResult> &experiments,
                     << ar.decompression_time_ms_random << ','
                     << ar.decompression_hash_full << ','
                     << ar.decompression_hash_vector << ','
-                    << ar.decompression_hash_random << '\n';
+                    << ar.decompression_hash_random << ','
+                    << ar.has_error << ','
+                    << ar.error_message << '\n';
         }
     }
     return true;

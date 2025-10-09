@@ -72,7 +72,7 @@ inline AlgorithmResult Compress(const AlgorithType algorithm, const ExperimentIn
     }
 
     AlgorithmResult mean_result = MeanTimes(
-        std::vector<AlgorithmResult>(results.begin() + 1, results.end())
+        std::vector(results.begin() + 1, results.end())
     );
     return mean_result;
 }

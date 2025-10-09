@@ -67,6 +67,9 @@ public:
     // Raw buffer info (useful if you need to serialize)
     const uint8_t *Data() const noexcept { return data; }
     std::size_t TotalBytes() const noexcept { return size_bytes_; }
+    std::size_t TotalSizeLengths() const noexcept { return offsets.size() * sizeof(uint32_t); }
+    // Includes the size of the length array and the data array, don't confuse it with TotalBytes
+    std::size_t TotalSizeRequired() const noexcept { return TotalBytes() + TotalSizeLengths(); }
     std::size_t ByeCapacity() const noexcept { return capacity_bytes_; }
 
     // Will include n+1 offsets where offset[i] + start is the pointer of i
@@ -74,7 +77,7 @@ public:
     std::vector<size_t> GetOffsets() const {
 
         std::vector<size_t> starts(offsets);
-        starts.push_back(TotalBytes());
+        starts.push_back(TotalSizeRequired());
         return starts;
     }
 

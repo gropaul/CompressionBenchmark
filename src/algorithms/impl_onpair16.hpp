@@ -18,7 +18,7 @@ public:
     void Initialize(const ExperimentInput &input) override {}
 
     idx_t GetDecompressionBufferSize(const idx_t decompressed_size) override {
-        return decompressed_size + 32; // OnPair16 might write out of bounds for performance
+        return decompressed_size + 64; // OnPair16 might write out of bounds for performance
     }
 
     void CompressAll(const StringCollector &data) override {
