@@ -123,8 +123,8 @@ inline ExperimentResult RunExperimentForColumn(
                             table_config.name, column_name
     );
 
-    const auto random_row_indices = GenerateRandomIndices(N_RANDOM_ROW_ACCESSES, collector.Size());
-    const auto random_vector_indices = GenerateRandomIndices(N_RANDOM_VECTOR_ACCESSES, collector.Size() / VECTOR_SIZE);
+    const auto random_row_indices = GenerateRandomIndices(N_RANDOM_ROW_ACCESSES, collector.Size() - 1);
+    const auto random_vector_indices = GenerateRandomIndices(N_RANDOM_VECTOR_ACCESSES, (collector.Size() / VECTOR_SIZE) - 1);
 
     const ExperimentInput input{const_cast<StringCollector &>(collector), random_row_indices, random_vector_indices};
 
@@ -148,18 +148,21 @@ inline std::vector<ExperimentResult> RunExperiment(duckdb::Connection &con, cons
                static_cast<unsigned long long>(n_tables),
                file.name.c_str());
         for (const auto &column: file.columns) {
-            auto state = ExperimentState::Init();
-            idx_t row_group_idx = 0;
-            while (row_group_idx < config.n_row_groups) {
-                auto res = RunExperimentForColumn(con, config, file, column, state);
-                results.push_back(res);
-                if (res.GetNumRows() == 0) {
-                    break;
-                }
-                state.row_group_idx += 1;
-                state.rows_offset += res.GetNumRows();
-                row_group_idx += 1;
-            }
+            // auto state = ExperimentState::Init();
+            // idx_t row_group_idx = 0;
+            // while (row_group_idx < config.n_row_groups) {
+            //     auto res = RunExperimentForColumn(con, config, file, column, state);
+            //     results.push_back(res);
+            //     if (res.GetNumRows() == 0) {
+            //         break;
+            //     }
+            //     state.row_group_idx += 1;
+            //     state.rows_offset += res.GetNumRows();
+            //     row_group_idx += 1;
+            // }
+
+            auto res = RunExperimentForColumn(con, config, file, column, ExperimentState::Init());
+            results.push_back(res);
         }
 
         current_table_index += 1;

@@ -51,6 +51,7 @@ public:
                             std::to_string(i) +
                             " (original: " + std::to_string(input.collector.Data()[i]) +
                             ", decompressed: " + std::to_string(decompression_buffer[i]) + ")\n";
+                    break;
                 }
             }
 
@@ -75,11 +76,24 @@ public:
                                                  random_decompression_buffer_write_ptr - random_decompression_buffer);
             const idx_t bytes_written = this->DecompressOne(row_idx, random_decompression_buffer_write_ptr,
                                                             remaining_capacity);
+
+            if (remaining_capacity > random_decompression_buffer_size) {
+                throw std::runtime_error("Decompression wrote out of bounds");
+            }
             random_decompression_buffer_write_ptr += bytes_written;
         }
         const auto t5 = clock::now();
 
         // *** Decompression Check (RANDOM ROWS) ***
+
+        // make sure we didn't write out of bounds
+        if (random_decompression_buffer_write_ptr - random_decompression_buffer != bytes_to_write) {
+            error_message += "Random row decompression wrote " +
+                    std::to_string(random_decompression_buffer_write_ptr - random_decompression_buffer) +
+                    " bytes, but expected " + std::to_string(bytes_to_write) + " bytes\n";
+            has_error = true;
+            throw std::runtime_error("Decompression wrote unexpected number of bytes");
+        }
 
         const uint8_t *random_decompression_buffer_check_ptr = random_decompression_buffer;
         std::vector<const unsigned char *> original_pointers = input.collector.GetPointers();
@@ -108,7 +122,7 @@ public:
             const idx_t start_row = vector_idx * VECTOR_SIZE;
             const idx_t end_row = start_row + VECTOR_SIZE;
 
-            if (start_row + VECTOR_SIZE >= input.collector.Size()) { continue; }
+            if (start_row + VECTOR_SIZE > input.collector.Size()) { continue; }
 
             for (idx_t row_idx = start_row; row_idx < end_row; row_idx++) {
                 const auto row_size = string_lengths[row_idx];
@@ -126,12 +140,13 @@ public:
             const idx_t start_row = vector_idx * VECTOR_SIZE;
             const idx_t end_row = start_row + VECTOR_SIZE;
 
-            if (start_row + VECTOR_SIZE >= input.collector.Size()) { continue; }
+            if (start_row + VECTOR_SIZE > input.collector.Size()) { continue; }
 
-            const idx_t remaining_capacity = vector_decompression_buffer_size - (
-                                                    vector_decompression_buffer_write_ptr - vector_decompression_buffer);
 
             for (idx_t row_idx = start_row; row_idx < end_row; row_idx++) {
+                const idx_t remaining_capacity = vector_decompression_buffer_size - (
+                                                     vector_decompression_buffer_write_ptr -
+                                                     vector_decompression_buffer);
                 const size_t bytes_written = this->DecompressOne(row_idx, vector_decompression_buffer_write_ptr,
                                                                  remaining_capacity);
                 vector_decompression_buffer_write_ptr += bytes_written;

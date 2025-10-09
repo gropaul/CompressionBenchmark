@@ -1,6 +1,5 @@
 #pragma once
 
-#include <filesystem>
 #include <fstream>
 #include <utility>
 #include <vector>
@@ -259,7 +258,7 @@ private:
 
 
 inline bool SaveResultsAsCSV(const std::vector<ExperimentResult> &experiments,
-                             const std::filesystem::path &file_path) {
+                             const std::string &file_path) {
     std::ofstream out(file_path, std::ios::binary);
     if (!out) return false;
 
@@ -273,7 +272,7 @@ inline bool SaveResultsAsCSV(const std::vector<ExperimentResult> &experiments,
 
     out << std::fixed << std::setprecision(6); // times to 3 decimals
 
-    printf("Saving results to %s\n", file_path.string().c_str());
+    printf("Saving results to %s\n", file_path.c_str());
     for (const auto &exp: experiments) {
         const auto &algos = exp.results();
         if (algos.empty()) {
