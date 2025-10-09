@@ -91,19 +91,19 @@ public:
         return header_size;
     }
 
-    size_t CompressedSize() override {
+    CompressedSizeInfo CompressedSize() override {
         if (!compressed_ready_) throw std::logic_error("CompressedSize called before CompressAll/Benchmark");
-        size_t total_compressed_size = 0;
+        size_t data_codes_size = 0;
         for (const unsigned long encoded_string_length: compressed_lengths) {
-            total_compressed_size += encoded_string_length;
+            data_codes_size += encoded_string_length;
         }
 
         // add the size to store the compressed lengths
-        // const size_t size_compressed_lengths = BitPackingUtils::GetCompressedSize(compressed_lengths);
-        // total_compressed_size += size_compressed_lengths;
+        const size_t size_compressed_lengths = BitPackingUtils::GetCompressedSize(compressed_lengths);
+        const idx_t symbol_table_size = CalcSymbolTableSize(encoder);
 
-        total_compressed_size += CalcSymbolTableSize(encoder);
-        return total_compressed_size;
+        return CompressedSizeInfo::FSST(symbol_table_size, data_codes_size, size_compressed_lengths);
+
     }
 
     void Free() override {

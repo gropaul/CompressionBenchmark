@@ -24,7 +24,6 @@ public:
     void CompressAll(const StringCollector &data) override {
         on_pair_ = OnPair(data.Size(), data.TotalBytes());
         on_pair_.compress_bytes(data.Data(), data.GetOffsets());
-        compressed_size_ = on_pair_.space_used();
         compressed_ready_ = true;
     }
 
@@ -38,9 +37,16 @@ public:
         return on_pair_.decompress_string(index, out);
     }
 
-    size_t CompressedSize() override {
-        if (!compressed_ready_) throw std::logic_error("CompressedSize called before CompressAll/Benchmark");
-        return compressed_size_;
+    CompressedSizeInfo CompressedSize() override {
+        const std::vector<size_t> compressed_string_lengths = on_pair_.compressed_string_lengths();
+        const size_t data_lengths_size = BitPackingUtils::GetCompressedSize(compressed_string_lengths);
+
+        return CompressedSizeInfo::OnPair(
+            on_pair_.space_used_dict_strings(),
+            on_pair_.space_used_dict_lengths(),
+            on_pair_.space_used_data_codes(),
+            data_lengths_size
+        );
     }
 
     void Free() override {
@@ -48,7 +54,6 @@ public:
     }
 
 private:
-    OnPair   on_pair_{};
-    size_t   compressed_size_{0};
-    bool     compressed_ready_{false};
+    OnPair on_pair_{};
+    bool compressed_ready_{false};
 };

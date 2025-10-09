@@ -21,12 +21,7 @@ public:
         const auto t0 = clock::now();
         this->CompressAll(input.collector);
         const auto t1 = clock::now();
-        const auto compressed_size = this->CompressedSize();
-
-        const CompressedSizeInfo compressed_size_info{
-            compressed_size,
-            {} // no parts for now
-        };
+        const auto compression_info = this->CompressedSize();
 
         // *** Decompression (ALL) ***
 
@@ -162,7 +157,7 @@ public:
 
         return {
             this->GetAlgorithmType(),
-            compressed_size_info,
+            compression_info,
             compression_duration_ns / 1e6,
             full_decompression_duration_ns / 1e6,
             vector_decompression_duration_ns / 1e6,
@@ -184,7 +179,7 @@ public:
     // returns the number of bytes written to out
     virtual idx_t DecompressOne(size_t index, uint8_t *out, size_t out_capacity) = 0;
 
-    virtual size_t CompressedSize() = 0;
+    virtual CompressedSizeInfo CompressedSize() = 0;
 
     virtual void Free() = 0;
 };

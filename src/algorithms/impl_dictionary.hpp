@@ -92,25 +92,23 @@ public:
         return str_len;
     }
 
-    size_t CompressedSize() override {
+    CompressedSizeInfo CompressedSize() override {
         if (!compressed_ready_) throw std::logic_error("CompressedSize called before CompressAll/Benchmark");
 
         // Calculate dictionary size (all unique strings)
-        size_t dictionary_size = 0;
+        size_t dictionary_strings_size = 0;
+        std::vector<size_t> dictionary_lengths;
         for (const auto& [ptr, len] : dictionary_order) {
-            dictionary_size += len;
+            dictionary_strings_size += len;
+            dictionary_lengths.push_back(len);
         }
+
+        const size_t dictionary_lengths_size = BitPackingUtils::GetCompressedSize(dictionary_lengths);
 
         // the codes will be bitpacked, so we need to calculate the size in bits
         const auto n_symbols = dictionary_order.size();
-        const size_t bits_per_index = n_symbols <= 1 ? 1 : static_cast<size_t>(std::ceil(std::log2(n_symbols)));
-
-        // Calculate codes
-        const size_t dictionary_codes_bits = bits_per_index * compressed_indices.size();
-        const size_t dictionary_codes_size = ceil(static_cast<double>(dictionary_codes_bits) / 8.0);
-
-
-        return dictionary_size + dictionary_codes_size;
+        const size_t data_codes_size = BitPackingUtils::GetCompressedSize(n_symbols, compressed_indices.size());
+        return CompressedSizeInfo::Dictionary(dictionary_strings_size, dictionary_lengths_size, data_codes_size);
     }
 
     void Free() override {

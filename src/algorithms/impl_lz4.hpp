@@ -15,9 +15,16 @@ struct Block {
     uint8_t* compressed_data;
 
     [[nodiscard]] size_t GetCompressedSize() const {
+        return GetCompressedSizeData() + GetCompressedSizeLengths();
+    }
+
+    [[nodiscard]] size_t GetCompressedSizeData() const {
+        return compressed_data_size;
+    }
+
+    [[nodiscard]] size_t GetCompressedSizeLengths() const {
         const size_t max_string_length = *std::max_element(uncompressed_lengths, uncompressed_lengths + BLOCK_VECTOR_SIZE);
-        const size_t size_uncompressed_lengths = BitPackingUtils::GetCompressedSize(max_string_length, BLOCK_VECTOR_SIZE);
-        return size_uncompressed_lengths + compressed_data_size;
+        return BitPackingUtils::GetCompressedSize(max_string_length, BLOCK_VECTOR_SIZE);
     }
 };
 
@@ -181,12 +188,14 @@ public:
         return string_length;
     }
 
-    size_t CompressedSize() override {
-        size_t compressed_size = 0;
+    CompressedSizeInfo CompressedSize() override {
+        size_t compressed_size_data = 0;
+        size_t compressed_size_lengths = 0;
         for (const auto &block: blocks_) {
-            compressed_size += block.GetCompressedSize();
+            compressed_size_data += block.GetCompressedSizeData();
+            compressed_size_lengths += block.GetCompressedSizeLengths();
         }
-        return compressed_size;
+        return CompressedSizeInfo::LZ4(compressed_size_data, compressed_size_lengths);
     }
 
     void Free() override {
