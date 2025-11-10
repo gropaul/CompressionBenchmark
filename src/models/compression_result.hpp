@@ -186,6 +186,7 @@ inline AlgorithmResult MeanTimes(const std::vector<AlgorithmResult> &results) {
 class ExperimentResult {
 public:
     explicit ExperimentResult(
+        const uint64_t rows_offset,
         const uint64_t row_group_idx,
         const uint64_t uncompressed_size,
         const uint64_t uncompressed_size_strings,
@@ -195,13 +196,13 @@ public:
         std::string table_name,
         std::string column_name
     )
-        : table_name_(std::move(table_name)), column_name_(std::move(column_name)), row_group_idx_(row_group_idx),
+        : table_name_(std::move(table_name)), column_name_(std::move(column_name)), rows_offset_(rows_offset), row_group_idx_(row_group_idx),
           n_rows_(n_rows), n_rows_not_empty_(n_rows_not_empty), uncompressed_size_(uncompressed_size),
           uncompressed_size_strings_(uncompressed_size_strings), uncompressed_size_lengths_(uncompressed_size_lengths) {
     }
 
     static ExperimentResult Empty() {
-        return ExperimentResult(0, 0, 0, 0, 0, 0, "", "");
+        return ExperimentResult(0,0, 0, 0, 0, 0, 0, "", "");
     }
 
     void setUncompressedSize(uint64_t size) { uncompressed_size_ = size; }
@@ -211,6 +212,7 @@ public:
     uint64_t GetNumRows() const { return n_rows_; }
     uint64_t GetNumRowsNotEmpty() const { return n_rows_not_empty_; }
     uint64_t GetRowGroupIdx() const { return row_group_idx_; }
+    uint64_t GetRowsOffset() const { return rows_offset_; }
 
     void AddResult(const AlgorithmResult &res) {
         results_.push_back(res);
@@ -246,6 +248,7 @@ private:
     const std::string table_name_;
     const std::string column_name_;
 
+    const uint64_t rows_offset_;
     const uint64_t row_group_idx_;
     const uint64_t n_rows_;
     const uint64_t n_rows_not_empty_;
@@ -264,7 +267,7 @@ inline bool SaveResultsAsCSV(const std::vector<ExperimentResult> &experiments,
 
     // Header
     out <<
-            "table,column,row_group_idx,uncompressed_size,uncompressed_size_strings,uncompressed_size_lengths,"
+            "table,column,row_offset,row_group_idx,uncompressed_size,uncompressed_size_strings,uncompressed_size_lengths,"
             "n_rows,n_rows_not_empty,algorithm,compressed_size,"
             "compressed_size_dictionary_strings,compressed_size_dictionary_lengths,compressed_size_dictionary,size_data_codes,compressed_size_data_lengths,compressed_size_data,"
             "compression_time_ms,decompression_time_ms_full,decompression_time_ms_vector,decompression_time_ms_random,"
@@ -283,6 +286,7 @@ inline bool SaveResultsAsCSV(const std::vector<ExperimentResult> &experiments,
         for (const auto &ar: algos) {
             out << CSVEscape(exp.table_name()) << ','
                     << CSVEscape(exp.column_name()) << ','
+                    << exp.GetRowsOffset() << ','
                     << exp.GetRowGroupIdx() << ','
                     << exp.GetUncompressedSize() << ','
                     << exp.GetUncompressedSizeStrings() << ','

@@ -77,7 +77,7 @@ public:
     std::vector<size_t> GetOffsets() const {
 
         std::vector<size_t> starts(offsets);
-        starts.push_back(TotalSizeRequired());
+        starts.push_back(TotalBytes());
         return starts;
     }
 

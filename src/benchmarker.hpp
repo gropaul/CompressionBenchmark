@@ -96,6 +96,7 @@ inline ExperimentResult RunExperimentForColumn(
         return ExperimentResult::Empty();
     }
 
+
     auto current_chunk = query_result->Fetch();
     while (current_chunk) {
         duckdb::Vector &strings_v = current_chunk->data[0];
@@ -116,7 +117,15 @@ inline ExperimentResult RunExperimentForColumn(
         return ExperimentResult::Empty();
     }
 
-    ExperimentResult result(state.row_group_idx,
+    printf("Running experiment for table %s, column %s, row group %llu: collected %llu rows, %llu bytes (lengths: %llu bytes)\n",
+           table_config.name.c_str(), column_name.c_str(),
+           static_cast<unsigned long long>(state.row_group_idx),
+           static_cast<unsigned long long>(collector.Size()),
+           static_cast<unsigned long long>(collector.TotalBytes()),
+           static_cast<unsigned long long>(collector.TotalSizeLengths())
+    );
+
+    ExperimentResult result(state.rows_offset, state.row_group_idx,
                             collector.TotalSizeRequired(),
                             collector.TotalBytes(), collector.TotalSizeLengths(),
                             query_result->RowCount(), collector.Size(),
@@ -148,21 +157,18 @@ inline std::vector<ExperimentResult> RunExperiment(duckdb::Connection &con, cons
                static_cast<unsigned long long>(n_tables),
                file.name.c_str());
         for (const auto &column: file.columns) {
-            // auto state = ExperimentState::Init();
-            // idx_t row_group_idx = 0;
-            // while (row_group_idx < config.n_row_groups) {
-            //     auto res = RunExperimentForColumn(con, config, file, column, state);
-            //     results.push_back(res);
-            //     if (res.GetNumRows() == 0) {
-            //         break;
-            //     }
-            //     state.row_group_idx += 1;
-            //     state.rows_offset += res.GetNumRows();
-            //     row_group_idx += 1;
-            // }
-
-            auto res = RunExperimentForColumn(con, config, file, column, ExperimentState::Init());
-            results.push_back(res);
+            auto state = ExperimentState::Init();
+            idx_t row_group_idx = 0;
+            while (row_group_idx < config.n_row_groups) {
+                auto res = RunExperimentForColumn(con, config, file, column, state);
+                results.push_back(res);
+                if (res.GetNumRows() == 0) {
+                    break;
+                }
+                state.row_group_idx += 1;
+                state.rows_offset += res.GetNumRows();
+                row_group_idx += 1;
+            }
         }
 
         current_table_index += 1;
