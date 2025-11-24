@@ -13,6 +13,8 @@ inline BenchmarkConfig GetBenchmarkFromDatabase(duckdb::Connection &con, Benchma
 
     std::unordered_map<std::string, TableConfig> table_map;
 
+    printf("Found %llu VARCHAR columns in the database.\n", result->RowCount());
+
     for (idx_t row_idx = 0; row_idx < result->RowCount(); row_idx++) {
         auto table_schema  = result->GetValue(0, row_idx).ToString();
         auto table_name  = result->GetValue(1, row_idx).ToString();

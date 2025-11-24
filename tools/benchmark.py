@@ -15,6 +15,7 @@ def run_compression_benchmark(duckdb_path: str, output_csv: str, executable_path
         output_csv: Path to output CSV file
         executable_path: Optional path to CompressionBenchmarkCLI executable
     """
+    print("Running CompressionBenchmark...")
     if executable_path is None:
         # Find executable relative to this file
         current_dir = Path(__file__).parent.parent
