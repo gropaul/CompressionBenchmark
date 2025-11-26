@@ -48,16 +48,13 @@ int main(int argc, char* argv[]) {
         con.Query("SELECT version()")->GetValue(0,0).Print();
 
         const BenchmarkConfigMetaData meta = {
-            5,
-            10,
+            2,
+            1,
             {
                 AlgorithType::FSST,
                 AlgorithType::FSST12,
                 AlgorithType::OnPair,
                 AlgorithType::OnPair16,
-                AlgorithType::OnPairMini10,
-                AlgorithType::OnPairMini12,
-                AlgorithType::OnPairMini14,
                 AlgorithType::Dictionary
             }
         };

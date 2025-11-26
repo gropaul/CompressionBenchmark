@@ -285,6 +285,8 @@ inline bool SaveResultsAsCSV(const std::vector<ExperimentResult> &experiments,
             printf("Skipping empty result for %s.%s\n", exp.table_name().c_str(), exp.column_name().c_str());
             // still emit a row (without algo-specific fields) if you want; or skip
             continue;
+        } else {
+            printf("Saving result for %s.%s with %zu algorithms\n", exp.table_name().c_str(), exp.column_name().c_str(), algos.size());
         }
         for (const auto &ar: algos) {
             out << CSVEscape(exp.table_name()) << ','
