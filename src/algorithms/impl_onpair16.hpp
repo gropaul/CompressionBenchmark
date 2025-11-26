@@ -28,12 +28,12 @@ public:
     }
 
     void DecompressAll(uint8_t *out, size_t out_capacity) override {
-        if (!compressed_ready_) throw std::logic_error("DecompressAll called before CompressAll/Benchmark");
+        if (!compressed_ready_) ErrorHandler::HandleLogicError("DecompressAll called before CompressAll/Benchmark");
         on_pair16_.decompress_all(out);
     }
 
     idx_t DecompressOne(size_t index, uint8_t *out, size_t out_capacity) override {
-        if (!compressed_ready_) throw std::logic_error("DecompressOne called before CompressAll/Benchmark");
+        if (!compressed_ready_) ErrorHandler::HandleLogicError("DecompressOne called before CompressAll/Benchmark");
         return on_pair16_.decompress_string(index, out);
     }
 

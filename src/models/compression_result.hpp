@@ -7,6 +7,7 @@
 #include <iostream>
 #include <iomanip>
 #include "../utils/csv_utils.hpp"
+#include "../utils/error_handler.hpp"
 
 
 struct TableConfig;
@@ -155,7 +156,9 @@ struct AlgorithmResult {
 
 inline AlgorithmResult MeanTimes(const std::vector<AlgorithmResult> &results) {
     if (results.empty()) {
-        throw std::invalid_argument("MeanTimes: empty input");
+        ErrorHandler::HandleInvalidArgumentError("MeanTimes: empty input");
+        // Return a default result in log mode
+        return AlgorithmResult{};
     }
 
     AlgorithmResult mean = results[0]; // copy first as baseline

@@ -17,7 +17,8 @@ public:
         if (BITS_PER_TOKEN == 12) return AlgorithType::OnPairMini12;
         if (BITS_PER_TOKEN == 14) return AlgorithType::OnPairMini14;
 
-        throw std::logic_error("OnPairMiniAlgorithm: Unsupported BITS_PER_TOKEN");
+        ErrorHandler::HandleLogicError("OnPairMiniAlgorithm: Unsupported BITS_PER_TOKEN");
+        return AlgorithType::OnPairMini10; // fallback for logging mode
     }
 
     void Initialize(const ExperimentInput &input) override {}
@@ -33,12 +34,12 @@ public:
     }
 
     void DecompressAll(uint8_t *out, size_t out_capacity) override {
-        if (!compressed_ready_) throw std::logic_error("DecompressAll called before CompressAll/Benchmark");
+        if (!compressed_ready_) ErrorHandler::HandleLogicError("DecompressAll called before CompressAll/Benchmark");
         on_pair_mini_.decompress_all(out);
     }
 
     idx_t DecompressOne(size_t index, uint8_t *out, size_t out_capacity) override {
-        if (!compressed_ready_) throw std::logic_error("DecompressOne called before CompressAll/Benchmark");
+        if (!compressed_ready_) ErrorHandler::HandleLogicError("DecompressOne called before CompressAll/Benchmark");
         return on_pair_mini_.decompress_string(index, out);
     }
 

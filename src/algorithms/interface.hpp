@@ -1,5 +1,6 @@
 #pragma once
 #include "../models/benchmark_config.hpp"
+#include "../utils/error_handler.hpp"
 
 
 // An abstract interface for compression algorithms
@@ -37,7 +38,7 @@ public:
         // check whether the decompressed data matches the original data
         const int full_cmp_result = std::memcmp(decompression_buffer, input.collector.Data(), input.collector.TotalBytes());
         if (full_cmp_result != 0) {
-            throw std::runtime_error("Full decompression data does not match original data: Algorithm: " + ToString(this->GetAlgorithmType()));
+            ErrorHandler::HandleRuntimeError("Full decompression data does not match original data: Algorithm: " + ToString(this->GetAlgorithmType()));
         }
         free(decompression_buffer);
 
@@ -69,16 +70,17 @@ public:
 
             if (std::memcmp(original_row_ptr, decompressed_row_ptr, original_row_size) != 0) {
                 // print both the strings to help debugging
-                printf("Original:     ");
-                for (idx_t i = 0; i < original_row_size; i++) {
-                    printf("%c ", original_row_ptr[i]);
-                }
-                printf("\nDecompressed: ");
-                for (idx_t i = 0; i < original_row_size; i++) {
-                    printf("%c ", decompressed_row_ptr[i]);
-                }
-                printf("\n");
-                throw std::runtime_error("Random row decompression data does not match original data at row " + std::to_string(row_idx));
+                // printf("Original:     ");
+                // for (idx_t i = 0; i < original_row_size; i++) {
+                //     printf("%c ", original_row_ptr[i]);
+                // }
+                // printf("\nDecompressed: ");
+                // for (idx_t i = 0; i < original_row_size; i++) {
+                //     printf("%c ", decompressed_row_ptr[i]);
+                // }
+                // printf("\n");
+                ErrorHandler::HandleRuntimeError("Random row decompression data does not match original data at row " + std::to_string(row_idx));
+                break;
             }
 
             current_buffer_position += original_row_size;

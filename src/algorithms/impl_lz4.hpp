@@ -104,7 +104,7 @@ public:
     }
 
     inline void DecompressAll(uint8_t *out, size_t out_capacity) override {
-        if (!compressed_ready_) throw std::logic_error("DecompressAll called before CompressAll/Benchmark");
+        if (!compressed_ready_) ErrorHandler::HandleLogicError("DecompressAll called before CompressAll/Benchmark");
 
         uint8_t* write_ptr = out;
         size_t remaining_capacity = out_capacity;
@@ -118,7 +118,7 @@ public:
             );
 
             if (decompressed_size < 0 || static_cast<size_t>(decompressed_size) != block.uncompressed_data_size) {
-                throw std::runtime_error("LZ4 decompression failed or output size mismatch");
+                ErrorHandler::HandleRuntimeError("LZ4 decompression failed or output size mismatch");
             }
 
             write_ptr += decompressed_size;
@@ -148,7 +148,7 @@ public:
         );
 
         if (decompressed_size < 0 || static_cast<size_t>(decompressed_size) != block.uncompressed_data_size) {
-            throw std::runtime_error("LZ4 decompression failed or output size mismatch");
+            ErrorHandler::HandleRuntimeError("LZ4 decompression failed or output size mismatch");
         }
 
         // reset the last compressed string offset
@@ -159,7 +159,7 @@ public:
     }
 
     inline idx_t DecompressOne(const size_t index, uint8_t *out, size_t out_capacity) override {
-        if (!compressed_ready_) throw std::logic_error("DecompressAll called before CompressAll/Benchmark");
+        if (!compressed_ready_) ErrorHandler::HandleLogicError("DecompressAll called before CompressAll/Benchmark");
 
         const size_t block_idx = index / BLOCK_VECTOR_SIZE;
         const Block &block = DecompressAndCacheBlock(block_idx);
@@ -169,7 +169,7 @@ public:
 
         // copy the string to the output buffer
         if (string_length > out_capacity) {
-            throw std::runtime_error("Output buffer too small for decompressed string");
+            ErrorHandler::HandleRuntimeError("Output buffer too small for decompressed string");
         }
 
         if (string_idx_in_block < last_decompressed_.string_idx) {

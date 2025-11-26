@@ -69,7 +69,7 @@ public:
     }
 
     inline void DecompressAll(uint8_t *out, size_t out_capacity) override {
-        if (!compressed_ready_) throw std::logic_error("DecompressAll called before CompressAll/Benchmark");
+        if (!compressed_ready_) ErrorHandler::HandleLogicError("DecompressAll called before CompressAll/Benchmark");
 
         uint8_t *write_ptr = out;
 
@@ -83,7 +83,7 @@ public:
     }
 
     inline idx_t DecompressOne(size_t index, uint8_t *out, size_t out_capacity) override {
-        if (!compressed_ready_) throw std::logic_error("DecompressOne called before CompressAll/Benchmark");
+        if (!compressed_ready_) ErrorHandler::HandleLogicError("DecompressOne called before CompressAll/Benchmark");
 
         const uint32_t dict_idx = compressed_indices[index];
         const auto& [str_ptr, str_len] = dictionary_order[dict_idx];
@@ -93,7 +93,7 @@ public:
     }
 
     CompressedSizeInfo CompressedSize() override {
-        if (!compressed_ready_) throw std::logic_error("CompressedSize called before CompressAll/Benchmark");
+        if (!compressed_ready_) ErrorHandler::HandleLogicError("CompressedSize called before CompressAll/Benchmark");
 
         // Calculate dictionary size (all unique strings)
         size_t dictionary_strings_size = 0;

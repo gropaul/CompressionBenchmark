@@ -54,7 +54,7 @@ public:
     }
 
     inline void DecompressAll(uint8_t *out, size_t out_capacity) override {
-        if (!compressed_ready_) throw std::logic_error("DecompressAll called before CompressAll/Benchmark");
+        if (!compressed_ready_) ErrorHandler::HandleLogicError("DecompressAll called before CompressAll/Benchmark");
         unsigned char *decompression_write_pointer = out;
 
         for (size_t index = 0; index < compressed_lengths.size(); index++) {
@@ -70,7 +70,7 @@ public:
     }
 
     inline idx_t DecompressOne(size_t index, uint8_t *out, size_t out_capacity) override {
-        if (!compressed_ready_) throw std::logic_error("DecompressOne called before CompressAll/Benchmark");
+        if (!compressed_ready_) ErrorHandler::HandleLogicError("DecompressOne called before CompressAll/Benchmark");
         return fsst_decompress(
             &decoder, /* IN: use this symbol table for compression. */
             compressed_lengths[index], /* IN: byte-length of compressed string. */
@@ -89,7 +89,7 @@ public:
     }
 
     CompressedSizeInfo CompressedSize() override {
-        if (!compressed_ready_) throw std::logic_error("CompressedSize called before CompressAll/Benchmark");
+        if (!compressed_ready_) ErrorHandler::HandleLogicError("CompressedSize called before CompressAll/Benchmark");
         size_t data_codes_size = 0;
         for (const unsigned long encoded_string_length: compressed_lengths) {
             data_codes_size += encoded_string_length;

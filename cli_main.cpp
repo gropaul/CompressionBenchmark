@@ -1,25 +1,44 @@
 #include <iostream>
 #include <string>
+#include <vector>
 #include "src/benchmarker.hpp"
 #include "src/models/benchmark_config.hpp"
 #include "src/models/compression_result.hpp"
 #include "src/schema/config_creator.hpp"
+#include "src/utils/error_handler.hpp"
 
 void printUsage(const char* programName) {
-    std::cout << "Usage: " << programName << " <duckdb_file> <output_csv>\n";
-    std::cout << "  duckdb_file: Path to the DuckDB database file\n";
-    std::cout << "  output_csv:  Path to the output CSV file\n";
+    std::cout << "Usage: " << programName << " [--log-errors] <duckdb_file> <output_csv>\n";
+    std::cout << "  --log-errors: Log errors to stderr instead of throwing exceptions (optional)\n";
+    std::cout << "  duckdb_file:  Path to the DuckDB database file\n";
+    std::cout << "  output_csv:   Path to the output CSV file\n";
 }
 
 int main(int argc, char* argv[]) {
-    if (argc != 3) {
+    // Parse arguments
+    std::vector<std::string> positional_args;
+    bool log_errors = false;
+
+    for (int i = 1; i < argc; i++) {
+        std::string arg = argv[i];
+        if (arg == "--log-errors") {
+            log_errors = true;
+        } else {
+            positional_args.push_back(arg);
+        }
+    }
+
+    if (positional_args.size() != 2) {
         std::cerr << "Error: Invalid number of arguments\n\n";
         printUsage(argv[0]);
         return 1;
     }
 
-    const std::string duckdb_path = argv[1];
-    const std::string output_csv = argv[2];
+    const std::string duckdb_path = positional_args[0];
+    const std::string output_csv = positional_args[1];
+
+    // Set error handling mode
+    ErrorHandler::SetLogErrorsMode(log_errors);
 
     try {
         duckdb::DuckDB db(duckdb_path);
