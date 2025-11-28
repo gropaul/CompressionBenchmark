@@ -16,8 +16,8 @@ int main() {
     con.Query("SELECT version()")->GetValue(0,0).Print();
 
     const BenchmarkConfigMetaData meta = {
-        1,
-        20,
+        5,
+        40,
         {
             AlgorithType::FSST,
             // AlgorithType::FSST12,
