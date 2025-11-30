@@ -278,15 +278,16 @@ inline bool SaveResultsAsCSV(const std::vector<ExperimentResult> &experiments,
 
     out << std::fixed << std::setprecision(6); // times to 3 decimals
 
+    uint64_t columns_saved = 0;
+    uint64_t columns_empty = 0;
     printf("Saving results to %s\n", file_path.c_str());
     for (const auto &exp: experiments) {
         const auto &algos = exp.results();
         if (algos.empty()) {
-            printf("Skipping empty result for %s.%s\n", exp.table_name().c_str(), exp.column_name().c_str());
-            // still emit a row (without algo-specific fields) if you want; or skip
+            columns_empty++;
             continue;
         } else {
-            printf("Saving result for %s.%s with %zu algorithms\n", exp.table_name().c_str(), exp.column_name().c_str(), algos.size());
+            columns_saved++;
         }
         for (const auto &ar: algos) {
             out << CSVEscape(exp.table_name()) << ','
@@ -317,5 +318,10 @@ inline bool SaveResultsAsCSV(const std::vector<ExperimentResult> &experiments,
                     << ar.error_message << '\n';
         }
     }
+
+    printf("Saved results for %llu columns (%llu empty)\n",
+           static_cast<unsigned long long>(columns_saved),
+           static_cast<unsigned long long>(columns_empty)
+    );
     return true;
 }

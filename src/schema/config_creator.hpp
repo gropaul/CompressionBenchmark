@@ -5,11 +5,16 @@
 
 #include "../models/benchmark_config.hpp"
 
-inline BenchmarkConfig GetBenchmarkFromDatabase(duckdb::Connection &con, BenchmarkConfigMetaData meta) {
-    auto result = con.Query(
-        "SELECT table_schema, table_name, column_name "
-        "FROM information_schema.columns "
-        "WHERE data_type = 'VARCHAR'");
+inline BenchmarkConfig GetBenchmarkFromDatabase(duckdb::Connection &con, BenchmarkConfigMetaData meta, const std::string &schema_filter = "") {
+    std::string query = "SELECT table_schema, table_name, column_name "
+                       "FROM information_schema.columns "
+                       "WHERE data_type = 'VARCHAR'";
+
+    if (!schema_filter.empty()) {
+        query += " AND lower(table_schema) = lower('" + schema_filter + "')";
+    }
+
+    auto result = con.Query(query);
 
     std::unordered_map<std::string, TableConfig> table_map;
 

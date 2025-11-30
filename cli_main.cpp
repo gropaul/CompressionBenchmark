@@ -8,21 +8,31 @@
 #include "src/utils/error_handler.hpp"
 
 void printUsage(const char* programName) {
-    std::cout << "Usage: " << programName << " [--log-errors] <duckdb_file> <output_csv>\n";
-    std::cout << "  --log-errors: Log errors to stderr instead of throwing exceptions (optional)\n";
-    std::cout << "  duckdb_file:  Path to the DuckDB database file\n";
-    std::cout << "  output_csv:   Path to the output CSV file\n";
+    std::cout << "Usage: " << programName << " [--log-errors] [--schema <schema_name>] <duckdb_file> <output_csv>\n";
+    std::cout << "  --log-errors:      Log errors to stderr instead of throwing exceptions (optional)\n";
+    std::cout << "  --schema <name>:   Filter to specific schema name (optional)\n";
+    std::cout << "  duckdb_file:       Path to the DuckDB database file\n";
+    std::cout << "  output_csv:        Path to the output CSV file\n";
 }
 
 int main(int argc, char* argv[]) {
     // Parse arguments
     std::vector<std::string> positional_args;
     bool log_errors = false;
+    std::string schema_name = "";
 
     for (int i = 1; i < argc; i++) {
         std::string arg = argv[i];
         if (arg == "--log-errors") {
             log_errors = true;
+        } else if (arg == "--schema") {
+            if (i + 1 < argc) {
+                schema_name = argv[++i];
+            } else {
+                std::cerr << "Error: --schema requires a value\n\n";
+                printUsage(argv[0]);
+                return 1;
+            }
         } else {
             positional_args.push_back(arg);
         }
@@ -58,7 +68,7 @@ int main(int argc, char* argv[]) {
                 AlgorithType::Dictionary
             }
         };
-        const auto config = GetBenchmarkFromDatabase(con, meta);
+        const auto config = GetBenchmarkFromDatabase(con, meta, schema_name);
 
         const auto results = RunExperiment(con, config);
         SaveResultsAsCSV(results, output_csv);
