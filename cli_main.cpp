@@ -63,9 +63,9 @@ int main(int argc, char* argv[]) {
             {
                 AlgorithType::FSST,
                 AlgorithType::FSST12,
-                AlgorithType::OnPair,
                 AlgorithType::OnPair16,
-                AlgorithType::Dictionary
+                AlgorithType::Dictionary,
+                AlgorithType::LZ4
             }
         };
         const auto config = GetBenchmarkFromDatabase(con, meta, schema_name);
