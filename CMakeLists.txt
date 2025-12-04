@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.31)
+cmake_minimum_required(VERSION 3.27)
 project(CompressionBenchmark)
 
 set(ENABLE_SANITIZER OFF CACHE BOOL "" FORCE)
