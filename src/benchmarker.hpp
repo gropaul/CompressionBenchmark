@@ -51,12 +51,20 @@ inline ExperimentResult RunExperimentForColumn(
         printf("%s\n", check_query_result->GetError().c_str());
     }
     const auto has_enough_rows = check_query_result->GetValue(0, 0).GetValue<bool>();
-    const auto has_enough_bytes = check_query_result->GetValue(1, 0).GetValue<bool>();
+    auto has_enough_bytes = check_query_result->GetValue(1, 0).GetValue<bool>();
+
+    if (!config.filter_by_min_bytes) {
+        has_enough_bytes = true;
+    }
 
     if (!has_enough_rows && !has_enough_bytes) {
         return ExperimentResult::Empty();
     }
 
+    std::string where_clause = "";
+    if (config.cut_by_min_bytes) {
+        where_clause = "WHERE running_sum <= " + std::to_string(ROW_GROUP_SIZE_NUMBER_OF_BYTES);
+    }
     std::string query = R"(
         WITH numbered AS (
           SELECT
@@ -77,7 +85,7 @@ inline ExperimentResult RunExperimentForColumn(
               SUM(value_length) OVER (ORDER BY rn) AS running_sum
             FROM numbered
         )
-        SELECT value FROM running_sum WHERE running_sum <= {{ROW_GROUP_SIZE_NUMBER_OF_BYTES}}
+        SELECT value FROM running_sum {{WHERE_CLAUSE}}
         )";
 
     // print the query
@@ -87,6 +95,7 @@ inline ExperimentResult RunExperimentForColumn(
     replace_all(query, "{{ROW_GROUP_SIZE_NUMBER_OF_VALUES}}", std::to_string(ROW_GROUP_SIZE_NUMBER_OF_VALUES));
     replace_all(query, "{{ROW_GROUP_SIZE_NUMBER_OF_BYTES}}", std::to_string(ROW_GROUP_SIZE_NUMBER_OF_BYTES));
     replace_all(query, "{{ROWS_OFFSET}}", std::to_string(state.rows_offset));
+    replace_all(query, "{{WHERE_CLAUSE}}", where_clause);
     // std::cout << "Executing query:\n" << query << "\n";
 
     const auto query_result = con.Query(query);

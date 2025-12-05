@@ -38,6 +38,8 @@ enum RowGroupMode {
 struct BenchmarkConfigMetaData {
     uint64_t n_repeats;
     uint64_t n_row_groups;
+    bool filter_by_min_bytes;
+    bool cut_by_min_bytes;
     std::vector<AlgorithType> algorithms;
     RowGroupMode row_group_mode;
 };

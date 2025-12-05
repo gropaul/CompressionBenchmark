@@ -60,6 +60,8 @@ int main(int argc, char* argv[]) {
         const BenchmarkConfigMetaData meta = {
             2,
             1,
+            false,
+            false,
             {
                 AlgorithType::FSST,
                 AlgorithType::FSST12,
